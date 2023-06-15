@@ -1,37 +1,33 @@
-name: test
-
+# This workflow will install dependencies, create coverage tests and run Pytest Coverage Comment
+# For more information see: https://github.com/MishaKav/pytest-coverage-comment/
+name: pytest-coverage-comment
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
-      - "*"
-
+      - '*'
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out repo code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          python-version: "3.x"
+          python-version: 3.8
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
-          python -m pip install -r requirements.txt
+          python -m pip install --upgrade pip
+          pip install flake8 pytest pytest-cov
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run tests with coverage
+      - name: Build coverage file
         run: |
-          python -m pytest -v --cov=./ --cov-report=xml:./pytest.xml --cov-report=term > ./pytest-coverage.txt tests
+          pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
 
-
-      - name: Comment coverage report on PR
-        uses: MishaKav/pytest-coverage-comment@v1.1.47
+      - name: Pytest coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
         with:
           pytest-coverage-path: ./pytest-coverage.txt
           junitxml-path: ./pytest.xml
